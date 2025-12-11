@@ -1,0 +1,16 @@
+http:
+  middlewares:
+    securityHeaders:
+      headers:
+        stsSeconds: 31536000          # 1 Jahr HSTS
+        stsIncludeSubdomains: true
+        stsPreload: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        frameDeny: true
+
+    compression:
+      compress: {}
+
+  services: {}
+  routers: {}
