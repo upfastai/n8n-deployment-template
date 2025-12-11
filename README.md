@@ -243,3 +243,31 @@ Dieses Template ermöglicht dir:
 * einfache Wartung und Updates
 
 ---
+
+````markdown
+## 🚀 Schnellinstallation (Auto-Installer)
+
+Mit diesem Befehl kannst du n8n auf einem neuen Ubuntu-Server in unter 60 Sekunden installieren:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/upfastai/n8n-deployment-template/main/scripts/install.sh | bash
+````
+
+Der Installer übernimmt automatisch:
+
+* Installation von Docker & Docker Compose
+* Klonen des Deployment-Repositories
+* Initialisierung der Traefik-ACME-Datei
+* Erstellen einer `.env` Vorlage
+* Vorbereitung des Systems für den ersten Start
+
+Nach der Installation:
+
+```bash
+nano /opt/n8n/.env
+docker compose up -d
+```
+
+Fertig — n8n läuft mit PostgreSQL, Traefik, HTTPS und aktiviertem Task Runner.
+
+```
