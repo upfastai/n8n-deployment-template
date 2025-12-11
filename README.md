@@ -1,0 +1,245 @@
+# 📘 n8n Deployment Template
+
+**Automated, secure, production-ready n8n stack (Traefik + PostgreSQL + Task Runners).**
+
+Dieses Repository stellt ein wiederverwendbares Deployment-Template bereit, um n8n auf jedem VPS (Hostinger, Hetzner, Netcup, AWS usw.) in wenigen Minuten auszurollen.
+
+Ideal für **Beratung**, **Kundenprojekte**, **schnelle Deployments** und **skalierbare digitale Fachkräfte**.
+
+---
+
+## 🚀 Features
+
+* **n8n 1.x** (Production Mode)
+* **PostgreSQL 16** als externe, persistente Datenbank
+* **Traefik Reverse Proxy** mit automatischen SSL-Zertifikaten
+* **Interne Task Runners** (fast, stabil, zero-config)
+* **Persistente Logs & Workflows**
+* **Execution Retention: 1.5 Jahre**
+* **DNS + HTTPS out-of-the-box**
+* Vollständig über **docker-compose** gesteuert
+
+---
+
+# 📦 Inhalte
+
+```
+n8n-deployment-template/
+│
+├── docker-compose.yml        # Main deployment stack
+├── .env.example              # Vorlage für Kundendaten & Secrets
+└── README.md                 # Diese Anleitung
+```
+
+---
+
+# 💾 Voraussetzungen
+
+* VPS mit Ubuntu 22.04 oder 24.04
+* Domain oder Subdomain (z. B. `n8n.example.com`)
+* Docker + Docker Compose installiert
+
+Falls Docker fehlt:
+
+```bash
+curl -fsSL https://get.docker.com | bash
+```
+
+---
+
+# 🛠 1. Repository klonen
+
+```bash
+git clone https://github.com/upfastai/n8n-deployment-template
+cd n8n-deployment-template
+```
+
+---
+
+# 🧩 2. `.env` Datei erstellen
+
+Aus der Vorlage kopieren:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Werte eintragen:
+
+| Variable             | Bedeutung                                 |
+| -------------------- | ----------------------------------------- |
+| `DOMAIN_NAME`        | Hauptdomain, z. B. `example.com`          |
+| `SUBDOMAIN`          | Subdomain, z. B. `n8n`                    |
+| `GENERIC_TIMEZONE`   | z. B. `Europe/Berlin`                     |
+| `POSTGRES_USER`      | PostgreSQL-Benutzer                       |
+| `POSTGRES_PASSWORD`  | PostgreSQL-Passwort                       |
+| `POSTGRES_DB`        | PostgreSQL-Datenbank                      |
+| `N8N_ENCRYPTION_KEY` | **WICHTIG: sicher generierter Schlüssel** |
+| `RUNNERS_AUTH_TOKEN` | Token für Task Runners (intern)           |
+
+Encryption Key generieren:
+
+```bash
+openssl rand -hex 24
+```
+
+---
+
+# 🚀 3. Deployment starten
+
+```bash
+docker compose up -d
+```
+
+Nach wenigen Sekunden ist n8n erreichbar:
+
+```
+https://SUBDOMAIN.DOMAIN_NAME
+```
+
+Beispiel:
+
+```
+https://n8n.example.com
+```
+
+---
+
+# 🧪 4. Health Check
+
+Alle Container prüfen:
+
+```bash
+docker ps
+```
+
+n8n-Logs ansehen:
+
+```bash
+docker logs root-n8n-1 --tail=50
+```
+
+Wenn du diese Zeilen siehst, läuft alles korrekt:
+
+```
+n8n ready on ::, port 5678
+n8n Task Broker ready on 127.0.0.1, port 5679
+Registered runner "JS Task Runner"
+Editor is now accessible via: https://n8n.example.com
+```
+
+---
+
+# ⚙️ Komponenten
+
+## 🧠 n8n
+
+* läuft im Production Mode
+* nutzt PostgreSQL als DB
+* interne Task Runners aktiviert
+* geschrieben in Node.js + TypeScript
+* Workflows, Credentials, Logs → persistiert
+
+---
+
+## 🗄 PostgreSQL 16
+
+Daten bleiben erhalten, selbst wenn Container gelöscht werden:
+
+Volume:
+
+```
+postgres_data:/var/lib/postgresql/data
+```
+
+---
+
+## 🔐 Traefik Reverse Proxy
+
+* automatische SSL-Zertifikate (Let's Encrypt)
+* HTTP → HTTPS Redirect
+* saubere Routing-Definition
+
+---
+
+## ⚡ Execution Retention (1.5 Jahre)
+
+Eingestellt über diese Variablen in `docker-compose.yml`:
+
+```
+EXECUTIONS_DATA_SAVE_ON_ERROR=all
+EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
+EXECUTIONS_DATA_PRUNE=true
+EXECUTIONS_DATA_MAX_AGE=13140   # ~ 1,5 Jahre
+EXECUTIONS_DATA_PRUNE_MAX_COUNT=0
+```
+
+---
+
+# 🔄 Update n8n Version
+
+Per CLI:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+---
+
+# 🧹 Entfernen (Cleanup)
+
+Stoppen:
+
+```bash
+docker compose down
+```
+
+Daten löschen:
+
+```bash
+docker volume rm root_n8n_data root_postgres_data
+```
+
+---
+
+# 📦 Backup & Restore (optional)
+
+Backup:
+
+```bash
+docker exec root-postgres-1 pg_dump -U n8n n8n > backup.sql
+```
+
+Restore:
+
+```bash
+cat backup.sql | docker exec -i root-postgres-1 psql -U n8n n8n
+```
+
+---
+
+# 👨‍🔧 Support / Weiterentwicklung
+
+Dieses Template stammt aus **UpFastAI – Automating Intelligence**
+und wird aktiv genutzt für:
+
+* Digitale Fachkräfte
+* OCR & KI-Agenten
+* Prozessautomatisierung
+* wiederverwendbare Deployments bei Kunden
+
+---
+
+# 🎉 Fertig!
+
+Dieses Template ermöglicht dir:
+
+* schnelle Wiederverwendbarkeit bei Kunden
+* stabilen Betrieb (Postgres + HTTPS + Runner)
+* sicheres Deployment
+* einfache Wartung und Updates
+
+---
