@@ -48,26 +48,12 @@ mkdir -p traefik
 touch traefik/acme.json
 chmod 600 traefik/acme.json
 
-# 5. Tägliche PostgreSQL-Backups aktivieren
+# 5. Tägliche PostgreSQL-Backups (systemweit)
 echo "🗄️ Richte tägliche PostgreSQL-Backups ein …"
 
-BACKUP_SCRIPT="/opt/n8n/scripts/backup_postgres.sh"
-CRON_LINE="30 2 * * * $BACKUP_SCRIPT >> /var/log/n8n-postgres-backup.log 2>&1"
-
-# Backup-Script ausführbar machen
-chmod +x "$BACKUP_SCRIPT"
-
-# Bestehende Cronjobs laden
-crontab -l 2>/dev/null > /tmp/cron.tmp || true
-
-# Cronjob nur hinzufügen, wenn er noch nicht existiert
-if ! grep -q "backup_postgres.sh" /tmp/cron.tmp; then
-  echo "$CRON_LINE" >> /tmp/cron.tmp
-  crontab /tmp/cron.tmp
-  echo "✅ Tägliche Backups aktiviert (02:30 Uhr)."
-else
-  echo "ℹ️ Backup-Cronjob existiert bereits."
-fi
+chmod +x /opt/n8n/scripts/backup_postgres.sh
+chmod +x /opt/n8n/scripts/install_backup_cron.sh
+bash /opt/n8n/scripts/install_backup_cron.sh
 
 # 6. Info
 echo "=========================================="
