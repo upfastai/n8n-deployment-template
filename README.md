@@ -1,3 +1,5 @@
+https://chatgpt.com/c/693addc6-ebec-8326-9a89-7f4293c01846
+
 # 📘 n8n Deployment Template
 
 **Automated, secure, production-ready n8n stack (Traefik + PostgreSQL + Task Runners).**
