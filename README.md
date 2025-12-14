@@ -175,6 +175,19 @@ EXECUTIONS_DATA_PRUNE=true
 EXECUTIONS_DATA_MAX_AGE=13140   # ~ 1,5 Jahre
 EXECUTIONS_DATA_PRUNE_MAX_COUNT=0
 ```
+---
+
+## 🗄️ Automatische PostgreSQL-Backups (Standard)
+
+Dieses Deployment richtet **automatisch tägliche PostgreSQL-Backups** ein, sobald der Auto-Installer ausgeführt wird.
+
+**Zeitpunkt:** täglich um **02:30 Uhr**  
+**Ablage:** `backups/`  
+**Logfile:** `/var/log/n8n-postgres-backup.log`
+
+Die Backups werden während der Installation konfiguriert – **kein manuelles Cron-Setup erforderlich**.
+
+> Hinweis: Das Setup ist idempotent. Bei erneuter Ausführung des Installers wird kein doppelter Cronjob angelegt.
 
 ---
 
