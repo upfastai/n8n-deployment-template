@@ -285,4 +285,14 @@ docker compose up -d
 
 Fertig — n8n läuft mit PostgreSQL, Traefik, HTTPS und aktiviertem Task Runner.
 
+## Persistence Model
+
+This deployment uses PostgreSQL as the single source of truth.
+
+The `.n8n` directory is **not persisted by design** to avoid state divergence
+between filesystem and database, which can otherwise lead to outdated or
+inconsistent workflows after updates or restores.
+
+All workflows, credentials and execution data are stored exclusively in PostgreSQL.
+
 ```
