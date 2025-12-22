@@ -87,13 +87,10 @@ services:
       - EXECUTIONS_DATA_PRUNE_MAX_COUNT=0
 
     volumes:
-      - n8n_data:/home/node/.n8n
       - /local-files:/files
 
 volumes:
   traefik_data:
-    external: true
-  n8n_data:
     external: true
   postgres_data:
     driver: local
