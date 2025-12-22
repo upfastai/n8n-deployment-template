@@ -295,4 +295,10 @@ inconsistent workflows after updates or restores.
 
 All workflows, credentials and execution data are stored exclusively in PostgreSQL.
 
+# IMPORTANT:
+# This key must NEVER be changed after initial deployment.
+# Changing it will make existing credentials unreadable.
+N8N_ENCRYPTION_KEY=CHANGE_ME
+
+
 ```
