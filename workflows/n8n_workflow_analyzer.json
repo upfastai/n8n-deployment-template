@@ -1,0 +1,232 @@
+{
+  "name": "n8n Workflow Analyzer – Auto-Describe All Workflows",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.N8N_HOST || 'http://localhost:5678' }}/api/v1/workflows?limit=250",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "fetch-workflows",
+      "name": "Fetch All Workflows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "n8n API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflows = $input.first().json.data;\n\nconst items = workflows\n  .filter(wf => wf.name !== $workflow.name)\n  .map(wf => {\n    // Strip unnecessary fields to reduce token usage\n    const stripped = {\n      name: wf.name,\n      nodes: (wf.nodes || []).map(n => ({\n        name: n.name,\n        type: n.type,\n        parameters: n.parameters\n      })),\n      connections: wf.connections\n    };\n    return {\n      json: {\n        workflowId: wf.id,\n        workflowName: wf.name,\n        workflowJson: JSON.stringify(stripped)\n      }\n    };\n  });\n\nreturn items;"
+      },
+      "id": "prepare-items",
+      "name": "Prepare Workflow Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "options": {
+          "batches": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "id": "loop",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are analyzing an n8n workflow.\n\nWrite a short description so that a reader or an LLM can quickly understand what the workflow is about.\n\nThe goal is only to identify the workflow and its purpose when reading it later.\n\nWrite 2–3 concise sentences including:\n- the main purpose of the workflow\n- the trigger or main input\n- the main systems or actions involved\n\nDo not describe node details or implementation.\n\nKeep the description between 30 and 80 words.\n\nWorkflow JSON:\n{{ $json.workflowJson }}",
+        "options": {}
+      },
+      "id": "llm-chain",
+      "name": "Generate Description",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "openai-model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [900, 220],
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.N8N_HOST || 'http://localhost:5678' }}/api/v1/workflows/{{ $('Loop Over Items').item.json.workflowId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ description: $json.text }) }}",
+        "options": {}
+      },
+      "id": "update-workflow",
+      "name": "Update Workflow Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "n8n API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "value": 1,
+        "unit": "seconds"
+      },
+      "id": "wait",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1320, 0]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Workflows": {
+      "main": [
+        [
+          {
+            "node": "Prepare Workflow Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Workflow Items": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Description": {
+      "main": [
+        [
+          {
+            "node": "Update Workflow Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Workflow Description": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Description",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "tags": []
+}
